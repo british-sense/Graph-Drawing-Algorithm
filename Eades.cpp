@@ -6,24 +6,29 @@
 
 using namespace std;
 
+#define NUM 6
+
 struct Point{
     double x;
     double y;
-
-    void add(Point v1, Point v2){
-        x = v1.x + v2.x;
-        y = v1.y + v2.y;
-    };
 };
 
 struct Node{
 
-    int id;
     Point rectangle;
     Point velocity;
     Point force;
 
-    void Eular(double dt, Point force){
+    Node(){
+        rectangle.x = ((double)rand() / RAND_MAX - 0.5) * 10;
+        rectangle.y = ((double)rand() / RAND_MAX - 0.5) * 10;
+        velocity.x = 0;
+        velocity.y = 0;
+        force.x = 0;
+        force.y = 0;
+    }
+
+    void Eular(double dt){
         rectangle.x += dt * velocity.x;
         rectangle.y += dt * velocity.y;
         velocity.x += dt * force.x;
@@ -32,11 +37,10 @@ struct Node{
 
     void SpringForce(Node another){
         
-        double k = 0.1;
-        double l = 60.0;
-        double dx = rectangle.x - another.rectangle.x;
-        double dy = rectangle.y - another.rectangle.y;
-        double d2 = dx * dx + dy + dy;
+        double l = 10.0;
+        double dx = another.rectangle.x - rectangle.x;
+        double dy = another.rectangle.y - rectangle.y;
+        double d2 = dx * dx + dy * dy;
         
         if(d2 < 0.001){
             force.x = (double)rand() / RAND_MAX - 0.5;
@@ -49,8 +53,8 @@ struct Node{
         double sin = dy / d;
         double dl = d - l;
 
-        force.x = -k * dl * cos;
-        force.y = -k * dl * sin;
+        force.x = dl * cos;
+        force.y = dl * sin;
     };
 
     void FrictionalForce(Node another){
@@ -58,35 +62,30 @@ struct Node{
         force.x = -m * velocity.x;
         force.y = -m * velocity.y;
     }
-
-    void Move(vector<Node> &other){
-
-        int i;
-        for(i = 0; i < other.size(); i++){
-            SpringForce(other[i]);
-            FrictionalForce(other[i]);
-        }
-    }
 };
 
 int main(){
 
     int i, j, k;
-    vector<Node> data(6);
+    vector<Node> data(NUM);
 
-    // 初期化
-    for(i = 0; i < data.size(); i++){
-        data[i].id = i;
-    }
+    // 力学モデル
+    for(k = 0; k < 1000000; k++){
 
-    // バネモデル実行
-    for(i = 0; i < 6; i++){
-        for(j = 0; j < 6; j++){
-            if(i != j){
+        for(i = 0; i < NUM; i++){
+
+            data[i].force.x = 0;
+            data[i].force.y = 0;
+
+            for(j = 0; j < NUM; j++){
+                if(i == j) continue;
                 data[i].SpringForce(data[j]);
-                data[i].Eular(0.01, data[j].force);             
+                data[i].FrictionalForce(data[j]);
             }
+
+            data[i].Eular(0.1);
         }
+
     }
 
     // 出力
