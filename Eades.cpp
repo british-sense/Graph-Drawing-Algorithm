@@ -36,22 +36,24 @@ struct Node{
         double d2 = dx * dx + dy * dy;
 
         if(d2 < 0.001){
-            force.x += (double)rand() / RAND_MAX - 0.5;
-            force.y += (double)rand() / RAND_MAX - 0.5;
+            force.x -= (double)rand() / RAND_MAX - 0.5;
+            force.y -= (double)rand() / RAND_MAX - 0.5;
             return;
         }
+
+        double d = sqrt(d2);
 
         double cos = dx / d;
         double sin = dy / d;
 
-        force.x += g / d2 * cos;
-        force.y += g / d2 * sin;
+        force.x -= g / d2 * cos;
+        force.y -= g / d2 * sin;
     }
 
     void SpringForce(Node another){
         
         double k = 1;
-        double l = 60;
+        double l = 10;
         double dx = another.rectangle.x - rectangle.x;
         double dy = another.rectangle.y - rectangle.y;
         double d2 = dx * dx + dy * dy;
@@ -84,7 +86,7 @@ int main(){
     vector<Node> node(NUM);
 
     // 力学モデル
-    for(k = 0; k < 1000; k++){
+    for(k = 0; k < 100000; k++){
 
         for(i = 0; i < NUM; i++){
 
@@ -94,8 +96,9 @@ int main(){
             // 外力
             for(j = 0; j < NUM; j++){
                 if(i == j) continue;
-                node[i].CoulombForce(node[j])
+                node[i].CoulombForce(node[j]);
                 node[i].SpringForce(node[j]);
+                node[i].FrictionalForce(node[j]);
             }
 
             // 合成
@@ -105,7 +108,7 @@ int main(){
     }
 
     // 出力
-    for(i = 0; i < MAX; i++){
+    for(i = 0; i < NUM; i++){
         cout << i << " " << node[i].rectangle.x << " " << node[i].rectangle.y << endl;
     }
 
