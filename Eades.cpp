@@ -8,6 +8,8 @@ using namespace std;
 
 #define NUM 6
 
+static int elength[NUM][NUM];
+
 struct Point{
     double x;
     double y;
@@ -19,15 +21,6 @@ struct Node{
     Point velocity;
     Point force;
 
-    Node(){
-        rectangle.x = ((double)rand() / RAND_MAX - 0.5) * 10;
-        rectangle.y = ((double)rand() / RAND_MAX - 0.5) * 10;
-        velocity.x = 0;
-        velocity.y = 0;
-        force.x = 0;
-        force.y = 0;
-    }
-
     void Eular(double dt){
         rectangle.x += dt * velocity.x;
         rectangle.y += dt * velocity.y;
@@ -35,16 +28,37 @@ struct Node{
         velocity.y += dt * force.y;
     };
 
+    void CoulombForce(Node another){
+
+        double g = 1;
+        double dx = another.rectangle.x - rectangle.x;
+        double dy = another.rectangle.y - rectangle.y;
+        double d2 = dx * dx + dy * dy;
+
+        if(d2 < 0.001){
+            force.x += (double)rand() / RAND_MAX - 0.5;
+            force.y += (double)rand() / RAND_MAX - 0.5;
+            return;
+        }
+
+        double cos = dx / d;
+        double sin = dy / d;
+
+        force.x += g / d2 * cos;
+        force.y += g / d2 * sin;
+    }
+
     void SpringForce(Node another){
         
-        double l = 10.0;
+        double k = 1;
+        double l = 60;
         double dx = another.rectangle.x - rectangle.x;
         double dy = another.rectangle.y - rectangle.y;
         double d2 = dx * dx + dy * dy;
         
         if(d2 < 0.001){
-            force.x = (double)rand() / RAND_MAX - 0.5;
-            force.y = (double)rand() / RAND_MAX - 0.5;
+            force.x += (double)rand() / RAND_MAX - 0.5;
+            force.y += (double)rand() / RAND_MAX - 0.5;
             return;
         }
 
@@ -53,44 +67,46 @@ struct Node{
         double sin = dy / d;
         double dl = d - l;
 
-        force.x = dl * cos;
-        force.y = dl * sin;
+        force.x += k * dl * cos;
+        force.y += k * dl * sin;
     };
 
     void FrictionalForce(Node another){
         double m = 0.3;
-        force.x = -m * velocity.x;
-        force.y = -m * velocity.y;
+        force.x += -m * velocity.x;
+        force.y += -m * velocity.y;
     }
 };
 
 int main(){
 
     int i, j, k;
-    vector<Node> data(NUM);
+    vector<Node> node(NUM);
 
     // 力学モデル
-    for(k = 0; k < 1000000; k++){
+    for(k = 0; k < 1000; k++){
 
         for(i = 0; i < NUM; i++){
 
-            data[i].force.x = 0;
-            data[i].force.y = 0;
+            node[i].force.x = 0;
+            node[i].force.y = 0;
 
+            // 外力
             for(j = 0; j < NUM; j++){
                 if(i == j) continue;
-                data[i].SpringForce(data[j]);
-                data[i].FrictionalForce(data[j]);
+                node[i].CoulombForce(node[j])
+                node[i].SpringForce(node[j]);
             }
 
-            data[i].Eular(0.1);
+            // 合成
+            node[i].Eular(0.1);
         }
 
     }
 
     // 出力
-    for(i = 0; i < 6; i++){
-        cout << i << " " << data[i].rectangle.x << " " << data[i].rectangle.y << endl;
+    for(i = 0; i < MAX; i++){
+        cout << i << " " << node[i].rectangle.x << " " << node[i].rectangle.y << endl;
     }
 
     return 0;
