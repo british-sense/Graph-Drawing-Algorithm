@@ -2,11 +2,12 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include <random>
 #include <list>
 
 using namespace std;
 
-#define NUM 6
+#define NUM 10
 
 static int elength[NUM][NUM];
 
@@ -20,6 +21,15 @@ struct Node{
     Point rectangle;
     Point velocity;
     Point force;
+
+    Node(){
+        rectangle.x = ((double)rand() / RAND_MAX - 0.5) * 10;
+        rectangle.y = ((double)rand() / RAND_MAX - 0.5) * 10;
+        velocity.x = 0;
+        velocity.y = 0;
+        force.x = 0;
+        force.y = 0;
+    }
 
     void Eular(double dt){
         rectangle.x += dt * velocity.x;
@@ -83,11 +93,12 @@ struct Node{
 int main(){
 
     int i, j, k;
+    double energy;
     vector<Node> node(NUM);
 
     // 力学モデル
-    for(k = 0; k < 100000; k++){
-
+    do{
+        energy = 0;
         for(i = 0; i < NUM; i++){
 
             node[i].force.x = 0;
@@ -103,9 +114,10 @@ int main(){
 
             // 合成
             node[i].Eular(0.1);
+            energy += node[i].velocity.x;
+            energy += node[i].velocity.y;
         }
-
-    }
+    }while(energy < 0.1);
 
     // 出力
     for(i = 0; i < NUM; i++){
