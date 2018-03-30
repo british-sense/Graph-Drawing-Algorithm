@@ -1,4 +1,6 @@
 #include <iostream>
+#include <cmath>
+#include <cfloat>
 #include <map>
 #include <set>
 
@@ -28,18 +30,18 @@ class Triangle{
 
     private:  
     // 最小の頂点を返す     
-    inline const Point *minpoint() const{  
+    inline const Point *MinPoint() const{  
         return *p1 < *p2 && *p1 < *p3 ? p1 : *p2 < *p3 ? p2 : p3;  
     }  
 
     // 中央の頂点を返す  
-    inline const Point *midpoint() const{  
+    inline const Point *MidPoint() const{  
         return *p1 < *p2 && *p2 < *p3 || *p3 < *p2 && *p2 < *p1 ? p2 : 
                *p2 < *p3 && *p3 < *p1 || *p1 < *p3 && *p3 < *p2 ? p3 : p1;  
     }  
 
     // 最大の頂点を返す  
-    inline const Point *maxpoint() const{  
+    inline const Point *MaxPoint() const{  
         return *p2 < *p1 && *p3 < *p1 ? p1 : *p3 < *p2 ? p2 : p3;  
     }  
 
@@ -56,13 +58,13 @@ class Triangle{
  
     // 大小判定
     bool operator<(const Triangle &t) const{  
-        return !(*minpoint() == *t.minpoint()) ? *minpoint() < *t.minpoint() :  
-               !(*midpoint() == *t.midpoint()) ? *midpoint() < *t.midpoint() :  
-               *maxpoint() < *t.maxpoint();  
+        return !(*MinPoint() == *t.MinPoint()) ? *MinPoint() < *t.MinPoint() :  
+               !(*MidPoint() == *t.MidPoint()) ? *MidPoint() < *t.MidPoint() :  
+               *MaxPoint() < *t.MaxPoint();  
     }  
 
     // 他の三角形と共通の点を持つかどうか
-    bool commonpoint(const Triangle &t) const{  
+    bool CommonPoint(const Triangle &t) const{  
         return *p1 == *t.p1 || *p1 == *t.p2 || *p1 == *t.p3 ||  
                *p2 == *t.p1 || *p2 == *t.p2 || *p2 == *t.p3 ||  
                *p3 == *t.p1 || *p3 == *t.p2 || *p3 == *t.p3;  
@@ -80,7 +82,7 @@ class Delaunay{
 
     private:
     // 重複判定 <三角形, 重複しているかどうか>
-    static inline void overlapjudge(TriangleMap *pjudge, Triangle &tri){
+    static inline void OverlapJudge(TriangleMap *pjudge, Triangle &tri){
         TriangleMap::iterator itr = pjudge->find(tri);  
         if(itr != pjudge->end() && itr->second){  
             pjudge->erase(itr);  
@@ -89,7 +91,48 @@ class Delaunay{
             pjudge->insert(TriangleMap::value_type(tri, true));  
         }
     };
-}
+
+    static void DelaunayTriangle(ConstPointSet &pointset, TriangleSet *ptriset){
+        
+        // 全ての点を包含する長方形の外接円を考える
+        Point max, min;
+        max.x = -DBL_MAX, max.y = -DBL_MAX; 
+        min.x = DBL_MAX, min.y = DBL_MAX; 
+        
+        for(ConstPointIter itr = pointset.begin(); itr != pointset.end(); itr++){
+            Point pt;
+            pt.x = itr->x; pt.y = itr->y;
+            if(max.x < pt.x) max.x = pt.x; if(max.y < pt.y) max.y = pt.y;
+            if(min.x > pt.x) min.x = pt.x; if(min.y > pt.y) min.y = pt.y;
+        }
+
+        Point center;
+        center.x  = (max.x - min.x) * 0.5;
+        center.y  = (max.y - min.y) * 0.5;
+
+        Point diff;
+        diff.x = max.x - center.x;
+        diff.y = max.y - center.y;  
+        double radius = sqrt(diff.x * diff.x + diff.y * diff.y) + 1.0;  
+  
+        Triangle EncloseTriangle;
+        Point *p1 = new Point;  // メモリ確保（314行目で解放）  
+        p1->x = center.x - sqrt(3.0) * radius;  
+        p1->y = center.y - radius;  
+  
+        Point *p2 = new Point;  // メモリ確保（315行目で解放）  
+        p2->x = center.x + sqrt(3.0) * radius;  
+        p2->y = center.y - radius;  
+  
+        Point *p3 = new Point;  // メモリ確保（316行目で解放）  
+        p3->x = center.x;  
+        p3->y = center.y + 2.0 * radius;  
+  
+        EncloseTriangle.p1 = p1;  
+        EncloseTriangle.p2 = p2;  
+        EncloseTriangle.p3 = p3;   
+    };
+};
 
 int main(){
 
