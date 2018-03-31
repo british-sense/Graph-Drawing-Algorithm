@@ -94,7 +94,7 @@ class Delaunay{
 
     static void DelaunayTriangle(ConstPointSet &pointset, TriangleSet *ptriset){
         
-        // 全ての点を包含する長方形の外接円を考える
+        // 全ての点を内包する三角形を作る
         Point max, min;
         max.x = -DBL_MAX, max.y = -DBL_MAX; 
         min.x = DBL_MAX, min.y = DBL_MAX; 
@@ -130,7 +130,38 @@ class Delaunay{
   
         EncloseTriangle.p1 = p1;  
         EncloseTriangle.p2 = p2;  
-        EncloseTriangle.p3 = p3;   
+        EncloseTriangle.p3 = p3;
+
+        ptriset->insert(EncloseTriangle);
+
+        // 点を順番に探索していく
+        for(ConstPointIter pitr = pointset.begin(); pitr != pointset.end(); pitr++){  
+        const Point *p = &*pitr;  
+  
+        // 追加候補の三角形を保持する一時マップ  
+        TriangleMap tmptriangle;
+
+            // 三角形のセットからひとつずつ要素を取り出し,
+            // 三角形の外接円の内部に含まれるかどうかを判定する
+            for(TriangleIter titr = ptriset->begin(); titr != ptriset->end(); ){
+
+                Triangle t = *titr;
+                Circle c;
+
+                double m = 2.0 * ((t.p2->x - t.p1->x) * (t.p3->y - t.p1->y) - (t.p2->y - t.p1->y) * (t.p3->x - t.p1->x));    
+                double x = ((t.p3->y - t.p1->y) * (t.p2->x * t.p2->x - t.p1->x * t.p1->x + t.p2->y * t.p2->y - t.p1->y * t.p1->y) + (t.p1->y - t.p2->y) * (t.p3->x * t.p3->x - t.p1->x * t.p1->x + t.p3->y * t.p3->y - t.p1->y * t.p1->y)) / m;  
+                double y = ((t.p1->x - t.p3->x) * (t.p2->x * t.p2->x - t.p1->x * t.p1->x + t.p2->y * t.p2->y - t.p1->y * t.p1->y) + (t.p2->x - t.p1->x) * (t.p3->x * t.p3->x - t.p1->x * t.p1->x + t.p3->y * t.p3->y - t.p1->y * t.p1->y)) / m;
+
+                c.center.x = x;
+                c.center.y = y;
+
+                diff.x = t.p1->x - x; 
+                diff.y = t.p1->y - y;
+                radius = sqrt(diff.x * diff.x + diff.y * diff.y);
+
+                c.radius = radius; 
+            }
+        }
     };
 };
 
