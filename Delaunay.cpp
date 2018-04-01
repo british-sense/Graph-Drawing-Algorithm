@@ -15,7 +15,7 @@ struct Point{
 
     bool operator<(const Point &p) const{  
       return x != p.x ? x < p.x : y < p.y;  
-    }  
+    }
 };
 
 struct Circle{
@@ -94,7 +94,6 @@ class Delaunay{
 
     static void DelaunayTriangle(ConstPointSet &pointset, TriangleSet *ptriset){
         
-        // 全ての点を内包する三角形を作る
         Point max, min;
         max.x = -DBL_MAX, max.y = -DBL_MAX; 
         min.x = DBL_MAX, min.y = DBL_MAX; 
@@ -116,15 +115,15 @@ class Delaunay{
         double radius = sqrt(diff.x * diff.x + diff.y * diff.y) + 1.0;  
   
         Triangle EncloseTriangle;
-        Point *p1 = new Point;  // メモリ確保（314行目で解放）  
+        Point *p1 = new Point;
         p1->x = center.x - sqrt(3.0) * radius;  
         p1->y = center.y - radius;  
   
-        Point *p2 = new Point;  // メモリ確保（315行目で解放）  
+        Point *p2 = new Point;
         p2->x = center.x + sqrt(3.0) * radius;  
         p2->y = center.y - radius;  
   
-        Point *p3 = new Point;  // メモリ確保（316行目で解放）  
+        Point *p3 = new Point;
         p3->x = center.x;  
         p3->y = center.y + 2.0 * radius;  
   
@@ -134,15 +133,11 @@ class Delaunay{
 
         ptriset->insert(EncloseTriangle);
 
-        // 点を順番に探索していく
         for(ConstPointIter pitr = pointset.begin(); pitr != pointset.end(); pitr++){  
         const Point *p = &*pitr;  
-  
-        // 追加候補の三角形を保持する一時マップ  
+
         TriangleMap tmptriangle;
 
-            // 三角形のセットからひとつずつ要素を取り出し,
-            // 三角形の外接円の内部に含まれるかどうかを判定する
             for(TriangleIter titr = ptriset->begin(); titr != ptriset->end(); ){
 
                 Triangle t = *titr;
