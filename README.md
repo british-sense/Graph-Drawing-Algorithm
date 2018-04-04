@@ -9,4 +9,4 @@ Eadesのグラフ描画アルゴリズムのc++での実装です.
 
 Delaunay図のc++での実装です.
 
-・https://ja.wikipedia.org/wiki/%E3%83%89%E3%83%AD%E3%83%8D%E3%83%BC%E5%9B%B3
+・https://arxiv.org/pdf/1604.01428.pdf
