@@ -1,9 +1,11 @@
 #include <iostream>
+#include <stdio.h>
 #include <cmath>
 #include <string>
 #include <vector>
 #include <random>
 #include <list>
+#include <stack>
 
 using namespace std;
 
@@ -23,20 +25,13 @@ struct Node{
     Point force;
 
     Node(){
-        rectangle.x = ((double)rand() / RAND_MAX - 0.5) * 10;
-        rectangle.y = ((double)rand() / RAND_MAX - 0.5) * 10;
+        rectangle.x = ((double)rand() / RAND_MAX - 0.5);
+        rectangle.y = ((double)rand() / RAND_MAX - 0.5);
         velocity.x = 0;
         velocity.y = 0;
         force.x = 0;
         force.y = 0;
     }
-
-    void Eular(double dt){
-        rectangle.x += dt * velocity.x;
-        rectangle.y += dt * velocity.y;
-        velocity.x += dt * force.x;
-        velocity.y += dt * force.y;
-    };
 
     void CoulombForce(Node another){
 
@@ -56,14 +51,13 @@ struct Node{
         double cos = dx / d;
         double sin = dy / d;
 
-        force.x -= g / d2 * cos;
-        force.y -= g / d2 * sin;
+        force.x -= (g / d2) * cos;
+        force.y -= (g / d2) * sin;
     }
 
-    void SpringForce(Node another){
+    void SpringForce(Node another, double diff){
         
         double k = 1;
-        double l = 10;
         double dx = another.rectangle.x - rectangle.x;
         double dy = another.rectangle.y - rectangle.y;
         double d2 = dx * dx + dy * dy;
@@ -77,17 +71,24 @@ struct Node{
         double d = sqrt(d2);
         double cos = dx / d;
         double sin = dy / d;
-        double dl = d - l;
+        double dd = d - diff;
 
-        force.x += k * dl * cos;
-        force.y += k * dl * sin;
+        force.x += k * dd * cos;
+        force.y += k * dd * sin;
     };
 
-    void FrictionalForce(Node another){
+    void FrictionalForce(){
         double m = 0.3;
         force.x += -m * velocity.x;
         force.y += -m * velocity.y;
     }
+
+     void Eular(double dt){
+        rectangle.x += dt * velocity.x;
+        rectangle.y += dt * velocity.y;
+        velocity.x += dt * force.x;
+        velocity.y += dt * force.y;
+    };
 };
 
 int main(){
@@ -95,6 +96,12 @@ int main(){
     int i, j, k;
     double energy;
     vector<Node> node(NUM);
+
+    for(i = 0; i < NUM; i++){
+        for(j = 0; j < NUM; j++){
+            elength[i][j] = (i + 1) * (j + 1);
+        }
+    }
 
     // 力学モデル
     do{
@@ -104,25 +111,32 @@ int main(){
             node[i].force.x = 0;
             node[i].force.y = 0;
 
-            // 外力
             for(j = 0; j < NUM; j++){
                 if(i == j) continue;
+                // クーロン力
                 node[i].CoulombForce(node[j]);
-                node[i].SpringForce(node[j]);
-                node[i].FrictionalForce(node[j]);
+
+                // if(繋がっていない) continue;
+                // フックの法則
+                node[i].SpringForce(node[j], 1);
+
+                // 摩擦力
+                node[i].FrictionalForce();
             }
 
-            // 合成
+            // 力の合成
             node[i].Eular(0.1);
-            energy += node[i].velocity.x;
-            energy += node[i].velocity.y;
-        }
-    }while(energy < 0.1);
 
-    // 出力
+            // 運動エネルギーの合計
+            energy += node[i].velocity.x * node[i].velocity.x;
+            energy += node[i].velocity.y * node[i].velocity.y;
+        }
+        cout << energy << endl;
+    }while(!(energy < 0.1));
+
+    // 座標の出力
     for(i = 0; i < NUM; i++){
         cout << i << " " << node[i].rectangle.x << " " << node[i].rectangle.y << endl;
     }
-
     return 0;
 }
