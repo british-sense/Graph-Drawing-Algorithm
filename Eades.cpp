@@ -9,7 +9,7 @@
 
 using namespace std;
 
-#define NUM 10
+#define NUM 300
 
 static int elength[NUM][NUM];
 
@@ -25,8 +25,8 @@ struct Node{
     Point force;
 
     Node(){
-        rectangle.x = ((double)rand() / RAND_MAX - 0.5);
-        rectangle.y = ((double)rand() / RAND_MAX - 0.5);
+        rectangle.x = ((double)rand() / RAND_MAX) * 500;
+        rectangle.y = ((double)rand() / RAND_MAX) * 500;
         velocity.x = 0;
         velocity.y = 0;
         force.x = 0;
@@ -57,7 +57,7 @@ struct Node{
 
     void SpringForce(Node another, double diff){
         
-        double k = 1;
+        double k = 0.1;
         double dx = another.rectangle.x - rectangle.x;
         double dy = another.rectangle.y - rectangle.y;
         double d2 = dx * dx + dy * dy;
@@ -99,7 +99,7 @@ int main(){
 
     for(i = 0; i < NUM; i++){
         for(j = 0; j < NUM; j++){
-            elength[i][j] = (i + 1) * (j + 1);
+            elength[i][j] = (int)(((double)rand() / RAND_MAX) * 500);
         }
     }
 
@@ -118,21 +118,21 @@ int main(){
 
                 // if(繋がっていない) continue;
                 // フックの法則
-                node[i].SpringForce(node[j], 1);
+                node[i].SpringForce(node[j], elength[i][j]);
 
                 // 摩擦力
                 node[i].FrictionalForce();
             }
 
             // 力の合成
-            node[i].Eular(0.1);
+            node[i].Eular(0.01);
 
             // 運動エネルギーの合計
             energy += node[i].velocity.x * node[i].velocity.x;
             energy += node[i].velocity.y * node[i].velocity.y;
         }
-        cout << energy << endl;
-    }while(!(energy < 0.1));
+        // cout << energy << endl;
+    }while(energy > NUM);
 
     // 座標の出力
     for(i = 0; i < NUM; i++){
